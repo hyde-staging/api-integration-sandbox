@@ -27,4 +27,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python .github/workflows/delete-stale-branches.py
+          python .github/bin/delete-stale-branches.py
