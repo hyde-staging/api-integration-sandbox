@@ -1,0 +1,54 @@
+name: Delete Stale Branches
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs nightly at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  delete-stale-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pygithub
+
+      - name: Delete stale branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -c "
+import os
+from datetime import datetime, timedelta
+from github import Github
+
+# Authenticate with GitHub
+g = Github(os.getenv('GITHUB_TOKEN'))
+repo = g.get_repo(os.getenv('GITHUB_REPOSITORY'))
+
+# Define the threshold for branch staleness
+stale_threshold = datetime.utcnow() - timedelta(hours=4)
+
+# Iterate over all branches
+for branch in repo.get_branches():
+    if branch.name == 'master':
+        continue
+
+    # Get the last commit on the branch
+    last_commit = repo.get_commits(sha=branch.name)[0]
+
+    # Check the date of the last commit
+    if last_commit.commit.author.date < stale_threshold:
+        ref = f'refs/heads/{branch.name}'
+        print(f'Deleting branch: {branch.name}')
+        repo.get_git_ref(ref).delete()
+"
