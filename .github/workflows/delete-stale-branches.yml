@@ -15,5 +15,5 @@ jobs:
 
       - name: Delete stale branches
         run: |
-          git branch | grep "^  integration-test-" | xargs git branch -d
+          git branch | grep "^integration-test-" | xargs git branch -d
           git branch -r | grep 'origin/integration-test-' | sed 's/origin\///' | xargs -I {} git push origin --delete {}
